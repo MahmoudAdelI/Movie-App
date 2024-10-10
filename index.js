@@ -12,28 +12,24 @@ const user = (state, action) => {
                         watchlist: []
                     }; 
         case 'ADD_TO_FAVORITES':
-            const favMovie = action.payload.state.find(movie => movie.id === action.payload.movieId);
             return state.userId === action.payload.userId ? 
                 {
                     ...state,
                     favorites: [...state.favorites, {
-                        title: favMovie.title,
-                        details: favMovie.details
+                        id: action.payload.movieId
                     }]
                 }
                 : state;
-        case 'ADD_TO_WATCHLIST':
-            const watchMovie = action.payload.state.find(movie => movie.id === action.payload.movieId);
-            
+        case 'ADD_TO_WATCHLIST':            
             return state.userId === action.payload.userId ? 
                 {
                     ...state,
                     watchlist: [...state.watchlist, {
-                        title: watchMovie.title,
-                        details: watchMovie.details
+                        id: action.payload.movieId
                     }]
                 }
                 : state;
+
         default:
             return state;
     }
@@ -55,43 +51,26 @@ const usersReducer = (state = [], action) => {
 
 const movie = (state, action) => {
     switch (action.type) {
-        case'ADD_MOVIE':
-            const addUser = action.payload.users.find( user => user.userId === action.payload.addedBy );
-            console.log(` added by: ${addUser.name}`);
-            if (addUser && addUser.type === 'ADMIN') {
+        case'ADD_MOVIE':            
                 return {
                         id: action.payload.movieId,
                         title: action.payload.title,
                         details: action.payload.details,
                         ratings: [],
-                        addedBy: addUser.name
+                        addedBy: action.payload.addedBy
                     };
-                                      
-                } else {
-                    console.error(`only admin can add movies`)
-                    return state;
-                };
-            
-
+                                              
         case 'RATE_MOVIE': 
-            const rateUser = action.payload.users.find(user => user.userId === action.payload.ratedBy); 
-            //console.log(rateUser);
-            if(rateUser && rateUser.type === 'USER') {
                 return state.id === action.payload.movieId ?        
                     {
                         ...state,
                         ratings: [...state.ratings, {
-                            id: rateUser.userId,
-                            name: rateUser.name,
+                            id: action.payload.ratedBy,
                             rating: action.payload.rating
                         }]
                     } 
-                    : state
+                    : state;
                 
-            } else {
-                {console.error(`only user can rate movies`)};
-                    return state;
-            }
         default:
             return state;
     }
@@ -102,15 +81,8 @@ const movieReducer = (state = [], action) => {
         case 'ADD_MOVIE':
                 return [...state, movie(undefined, action)];                  
 
-        case 'DELETE_MOVIE':
-            const deleteUser = action.payload.users.find(user => user.userId === action.payload.deletedBy);
-            //console.log(` deleted by: ${deleteUser.name}`);
-            if(deleteUser && deleteUser.type === 'ADMIN') {
+        case 'DELETE_MOVIE':   
                 return state.filter( movie => movie.id !== action.payload.movieId );
-            } else {
-                {console.error(`only admin can delete movies`)};
-                return state;
-            }
 
         case 'RATE_MOVIE':
             return state.map(m => movie(m, action));
@@ -127,59 +99,59 @@ const addUser = (userId, name, type) => {
     });
 };
 
-const addMovie = (movieId, title, details, addedBy, users) => {
-    return store.dispatch({
+const addMovie = (movieId, title, details, addedBy) => {
+    const user = store.getState().users.find(user => user.userId === addedBy);
+    return user.type === 'ADMIN' ? 
+        store.dispatch({
         type: 'ADD_MOVIE',
-        payload: {movieId, title, details, addedBy, users}
-    });
+        payload: {movieId, title, details, addedBy}
+        }) : console.error('only admin can add movies');
 };
 
-const deleteMovie = (movieId, deletedBy, users) => {
-    return store.dispatch({
+const deleteMovie = (movieId, deletedBy) => {
+    const user = store.getState().users.find(user => user.userId === deletedBy);
+    return user.type === 'ADMIN' ?
+        store.dispatch({
         type: 'DELETE_MOVIE',
-        payload: {movieId, deletedBy, users}
-    });
+        payload: {movieId, deletedBy}
+        }) : console.error('only admin can add movies');
 };
 
-const rateMovie = (movieId, rating, ratedBy, users) => {
-    return store.dispatch({
+const rateMovie = (movieId, rating, ratedBy) => {
+    const user = store.getState().users.find(user => user.userId === ratedBy);
+    return user.type === 'USER' ?
+        store.dispatch({
         type: 'RATE_MOVIE',
-        payload: {movieId, rating, ratedBy, users}
-    });
+        payload: {movieId, rating, ratedBy}
+    }) : console.error('only users can add movies');
 };
 
-const addToFavorites = (userId, movieId, state) => {
-    return store.dispatch({
+const addToFavorites = (userId, movieId) => {
+    const movie = store.getState().movies.find(movie => movie.id === movieId);
+    return movie ?
+        store.dispatch({
         type: 'ADD_TO_FAVORITES',
-        payload: {userId, movieId, state}
-    });
+        payload: {userId, movieId}
+    }) : console.error('movie not found');
 };
 
-const addToWatchlist = (userId, movieId, state) => {
-    return store.dispatch({
+const addToWatchlist = (userId, movieId) => {
+    const movie = store.getState().movies.find(movie => movie.id === movieId);
+    return movie ?
+        store.dispatch({
         type: 'ADD_TO_WATCHLIST',
-        payload: {userId, movieId, state}
-    });
+        payload: {userId, movieId}
+    }) : console.error('movie not found');
 };
 
 const getAllMovies = () => {
     return store.getState().movies;
 };
 
-const whoRatedMovie = (movieId, users) => {
-    // this approach gets the ratings array.
-    // const movie = store.getState().movies.find(movie => movie.id === movieId);
-    // return movie ? movie.ratings : `Movie not found`;
-    //.......................
-
-    //// this approach gets the users objects who rated themselves.
-    const movieRatings = store.getState().movies.find(movie => movie.id === movieId).ratings;
-    //using sets is much faster than using array.icludes
-    const userIDs = new Set(movieRatings.map(rating => rating.id));
-    const ratedUsers = users.filter(user => userIDs.has(user.userId))
-    
-    return ratedUsers;
-}
+const whoRatedMovie = (movieId) => {
+    const movie = store.getState().movies.find(movie => movie.id === movieId);
+    return movie ? movie.ratings.map(r => r.id) : 'movie not found';
+};
 
 const rootReducer = combineReducers({ users: usersReducer, movies: movieReducer });
 const store = createStore(rootReducer);
@@ -190,26 +162,26 @@ addUser(20, 'ahmed', 'USER');
 addUser(30, 'yasser', 'USER');
 
 //adding movies
-addMovie(0, 'Taxi Driver', 'a movie about a deppresed taxi driver', 10, store.getState().users);
-addMovie(1, 'Inception', 'nobody actually knows what is going on', 10, store.getState().users);
-addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10, store.getState().users);
+addMovie(0, 'Taxi Driver', 'a movie about a deppresed taxi driver', 10);
+addMovie(1, 'Inception', 'nobody actually knows what is going on', 10);
+addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10);
 
 //deleting movies
-//deleteMovie(1, 10, store.getState().users);
+deleteMovie(1, 20);
 
 //rating movies
-rateMovie(0, 8.5, 20, store.getState().users);
-rateMovie(0, 9.7, 30, store.getState().users);
+rateMovie(0, 8.5, 20);
+rateMovie(0, 9.7, 30);
 
 //get all movies
 console.log(getAllMovies());
 
 //add to favorites
-addToFavorites(10, 0, store.getState().movies);
+addToFavorites(10, 0);
 //add to watchlist
-//addToWatchlist(10, 1, store.getState().movies);
+addToWatchlist(10, 1);
 
 //find who rated a movie
-console.log(whoRatedMovie(0, store.getState().users));
+console.log(whoRatedMovie(0));
 
 console.log(store.getState());
