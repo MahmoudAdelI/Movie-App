@@ -1,101 +1,120 @@
 import { createStore, combineReducers } from "./redux.js";
 
-const randomId = () => Math.floor(Math.random() * 10000000000);
-const usersReducer = (state = [], action) => {
+//const randomId = () => Math.floor(Math.random() * 10000000000);
+const user = (state, action) => {
     switch (action.type) {
         case 'ADD_USER':
-            return [ ...state,
-                {
-                    userId: action.payload.userId,
-                    name: action.payload.name,
-                    type: action.payload.type,
-                    favorites: [],
-                    watchlist: []
-                }
-            ];
+            return  {
+                        userId: action.payload.userId,
+                        name: action.payload.name,
+                        type: action.payload.type,
+                        favorites: [],
+                        watchlist: []
+                    }; 
         case 'ADD_TO_FAVORITES':
             const favMovie = action.payload.state.find(movie => movie.id === action.payload.movieId);
-            //console.log(movie);
-            return state.map(user =>
-                 user.userId === action.payload.userId ? 
+            return state.userId === action.payload.userId ? 
                 {
-                    ...user,
-                    favorites: [...user.favorites, {
+                    ...state,
+                    favorites: [...state.favorites, {
                         title: favMovie.title,
                         details: favMovie.details
                     }]
                 }
-                : user
-                );
+                : state;
+        case 'ADD_TO_WATCHLIST':
+            const watchMovie = action.payload.state.find(movie => movie.id === action.payload.movieId);
             
-            case 'ADD_TO_WATCHLIST':
-                const watchMovie = action.payload.state.find(movie => movie.id === action.payload.movieId);
-                //console.log(movie);
-                return state.map(user =>
-                    user.userId === action.payload.userId ? 
-                    {
-                        ...user,
-                        watchlist: [...user.watchlist, {
-                            title: watchMovie.title,
-                            details: watchMovie.details
-                        }]
-                    }
-                    : user
-                    );
-                default:
-                    return state;
+            return state.userId === action.payload.userId ? 
+                {
+                    ...state,
+                    watchlist: [...state.watchlist, {
+                        title: watchMovie.title,
+                        details: watchMovie.details
+                    }]
+                }
+                : state;
+        default:
+            return state;
+    }
+}
+const usersReducer = (state = [], action) => {
+    switch (action.type) {
+        case 'ADD_USER':
+            return [...state, user(undefined, action)];
+
+        case 'ADD_TO_FAVORITES':        
+            return state.map(u => user(u, action));
+            
+        case 'ADD_TO_WATCHLIST':           
+            return state.map(u => user(u, action));
+        default:
+            return state;
     };
 };
-const movieReducer = (state = [], action) => {
+
+const movie = (state, action) => {
     switch (action.type) {
-        case 'ADD_MOVIE':
+        case'ADD_MOVIE':
             const addUser = action.payload.users.find( user => user.userId === action.payload.addedBy );
-            
-            //console.log(` added by: ${addUser.name}`);
+            console.log(` added by: ${addUser.name}`);
             if (addUser && addUser.type === 'ADMIN') {
-                return [...state,
-                    {
+                return {
                         id: action.payload.movieId,
                         title: action.payload.title,
                         details: action.payload.details,
                         ratings: [],
                         addedBy: addUser.name
-                    }];
-                    
-                } else {console.error(`only admin can add movies`)};
-
-        case 'DELETE_MOVIE':
-                const deleteUser = action.payload.users.find(user => user.userId === action.payload.deletedBy);
-                //console.log(` deleted by: ${deleteUser.name}`);
-                if(deleteUser && deleteUser.type === 'ADMIN') {
-                    return state.filter( movie => movie.id !== action.payload.movieId );
+                    };
+                                      
                 } else {
-                    {console.error(`only admin can delete movies`)};
+                    console.error(`only admin can add movies`)
                     return state;
-                }
+                };
+            
 
-        case 'RATE_MOVIE':
+        case 'RATE_MOVIE': 
             const rateUser = action.payload.users.find(user => user.userId === action.payload.ratedBy); 
             //console.log(rateUser);
             if(rateUser && rateUser.type === 'USER') {
-                return state.map( movie => 
-                    movie.id === action.payload.movieId ? 
-                    /* spread movie properties but overwite ratings,
-                    spread the movie ratings and add the new rating*/
+                return state.id === action.payload.movieId ?        
                     {
-                        ...movie,
-                        ratings: [...movie.ratings, {
+                        ...state,
+                        ratings: [...state.ratings, {
                             id: rateUser.userId,
                             name: rateUser.name,
                             rating: action.payload.rating
                         }]
                     } 
-                    : movie
-                );
+                    : state
+                
             } else {
                 {console.error(`only user can rate movies`)};
                     return state;
             }
+        default:
+            return state;
+    }
+}
+
+const movieReducer = (state = [], action) => {
+    switch (action.type) {
+        case 'ADD_MOVIE':
+                return [...state, movie(undefined, action)];                  
+
+        case 'DELETE_MOVIE':
+            const deleteUser = action.payload.users.find(user => user.userId === action.payload.deletedBy);
+            //console.log(` deleted by: ${deleteUser.name}`);
+            if(deleteUser && deleteUser.type === 'ADMIN') {
+                return state.filter( movie => movie.id !== action.payload.movieId );
+            } else {
+                {console.error(`only admin can delete movies`)};
+                return state;
+            }
+
+        case 'RATE_MOVIE':
+            return state.map(m => movie(m, action));
+            
         default:
                 return state;
     };
@@ -188,7 +207,7 @@ console.log(getAllMovies());
 //add to favorites
 addToFavorites(10, 0, store.getState().movies);
 //add to watchlist
-addToWatchlist(10, 1, store.getState().movies);
+//addToWatchlist(10, 1, store.getState().movies);
 
 //find who rated a movie
 console.log(whoRatedMovie(0, store.getState().users));
