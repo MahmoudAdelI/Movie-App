@@ -98,8 +98,10 @@ const addUser = (userId, name, type) => {
     });
 };
 
+const getUser = id => store.getState().users.find(user => user.userId === id);
+
 const addMovie = (movieId, title, details, addedBy) => {
-    const user = store.getState().users.find(user => user.userId === addedBy);
+    const user = getUser(addedBy);
     return user.type === 'ADMIN' ? 
         store.dispatch({
         type: 'ADD_MOVIE',
@@ -108,7 +110,7 @@ const addMovie = (movieId, title, details, addedBy) => {
 };
 
 const deleteMovie = (movieId, deletedBy) => {
-    const user = store.getState().users.find(user => user.userId === deletedBy);
+    const user = getUser(deletedBy);
     return user.type === 'ADMIN' ?
         store.dispatch({
         type: 'DELETE_MOVIE',
@@ -117,7 +119,7 @@ const deleteMovie = (movieId, deletedBy) => {
 };
 
 const rateMovie = (movieId, rating, ratedBy) => {
-    const user = store.getState().users.find(user => user.userId === ratedBy);
+    const user = getUser(ratedBy);
     return user.type === 'USER' ?
         store.dispatch({
         type: 'RATE_MOVIE',
@@ -125,8 +127,10 @@ const rateMovie = (movieId, rating, ratedBy) => {
     }) : console.error('only users can add movies');
 };
 
+const getMovie = id => store.getState().movies.find(movie => movie.id === id);
+
 const addToFavorites = (userId, movieId) => {
-    const movie = store.getState().movies.find(movie => movie.id === movieId);
+    const movie = getMovie(movieId);
     return movie ?
         store.dispatch({
         type: 'ADD_TO_FAVORITES',
@@ -135,7 +139,7 @@ const addToFavorites = (userId, movieId) => {
 };
 
 const addToWatchlist = (userId, movieId) => {
-    const movie = store.getState().movies.find(movie => movie.id === movieId);
+    const movie = getMovie(movieId);
     return movie ?
         store.dispatch({
         type: 'ADD_TO_WATCHLIST',
@@ -148,7 +152,7 @@ const getAllMovies = () => {
 };
 
 const whoRatedMovie = (movieId) => {
-    const movie = store.getState().movies.find(movie => movie.id === movieId);
+    const movie = getMovie(movieId);
     return movie ? movie.ratings.map(r => r.id) : 'movie not found';
 };
 
