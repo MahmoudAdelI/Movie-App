@@ -1,6 +1,5 @@
 import { createStore, combineReducers } from "./redux.js";
 
-//const randomId = () => Math.floor(Math.random() * 10000000000);
 const user = (state, action) => {
     switch (action.type) {
         case 'ADD_USER':
@@ -178,6 +177,7 @@ console.log(getAllMovies());
 
 //add to favorites
 addToFavorites(10, 0);
+
 //add to watchlist
 addToWatchlist(10, 1);
 
