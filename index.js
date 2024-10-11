@@ -54,6 +54,7 @@ const movie = (state, action) => {
                 return {
                         id: action.payload.movieId,
                         title: action.payload.title,
+                        img: action.payload.img,
                         details: action.payload.details,
                         ratings: [],
                         addedBy: action.payload.addedBy
@@ -91,7 +92,7 @@ const movieReducer = (state = [], action) => {
     };
 };
 
-const addUser = (userId, name, type) => {
+export const addUser = (userId, name, type) => {
     return store.dispatch({
         type: 'ADD_USER',
         payload: {userId, name, type}
@@ -100,16 +101,16 @@ const addUser = (userId, name, type) => {
 
 const getUser = id => store.getState().users.find(user => user.userId === id);
 
-const addMovie = (movieId, title, details, addedBy) => {
+export const addMovie = (movieId, title, details, addedBy, img) => {
     const user = getUser(addedBy);
     return user.type === 'ADMIN' ? 
         store.dispatch({
         type: 'ADD_MOVIE',
-        payload: {movieId, title, details, addedBy}
+        payload: {movieId, title, details, addedBy, img}
         }) : console.error('only admin can add movies');
 };
 
-const deleteMovie = (movieId, deletedBy) => {
+export const deleteMovie = (movieId, deletedBy) => {
     const user = getUser(deletedBy);
     return user.type === 'ADMIN' ?
         store.dispatch({
@@ -118,18 +119,21 @@ const deleteMovie = (movieId, deletedBy) => {
         }) : console.error('only admin can delete movies');
 };
 
-const rateMovie = (movieId, rating, ratedBy) => {
+export const rateMovie = (movieId, rating, ratedBy) => {
+    const movie = getMovie(movieId);
     const user = getUser(ratedBy);
-    return user.type === 'USER' ?
-        store.dispatch({
-        type: 'RATE_MOVIE',
-        payload: {movieId, rating, ratedBy}
-    }) : console.error('only users can rate movies');
+    if(movie) {
+        return user && user.type === 'USER' ?
+            store.dispatch({
+            type: 'RATE_MOVIE',
+            payload: {movieId, rating, ratedBy}
+        }) : console.error('only users can rate movies');
+    } else {console.error('movie not found')};
 };
 
 const getMovie = id => store.getState().movies.find(movie => movie.id === id);
 
-const addToFavorites = (userId, movieId) => {
+export const addToFavorites = (userId, movieId) => {
     const movie = getMovie(movieId);
     return movie ?
         store.dispatch({
@@ -138,7 +142,7 @@ const addToFavorites = (userId, movieId) => {
     }) : console.error('movie not found');
 };
 
-const addToWatchlist = (userId, movieId) => {
+export const addToWatchlist = (userId, movieId) => {
     const movie = getMovie(movieId);
     return movie ?
         store.dispatch({
@@ -147,45 +151,60 @@ const addToWatchlist = (userId, movieId) => {
     }) : console.error('movie not found');
 };
 
-const getAllMovies = () => {
+export const getAllMovies = () => {
     return store.getState().movies;
 };
 
-const whoRatedMovie = (movieId) => {
+export const whoRatedMovie = movieId => {
     const movie = getMovie(movieId);
     return movie ? movie.ratings.map(r => r.id) : 'movie not found';
 };
 
+export const getOverAllRate = movieId => {
+    const movie = getMovie(movieId);
+    if(movie && movie.ratings.length > 0) { 
+        const ratings = movie.ratings.map(r => r.rating);
+        const ratingsSum = ratings.reduce((acc, current)=> acc + current, 0);
+        return Math.round(ratingsSum / ratings.length) + '/10';
+    } else {
+        return 0 + '/10'
+    };
+};
+
 const rootReducer = combineReducers({ users: usersReducer, movies: movieReducer });
-const store = createStore(rootReducer);
+export const store = createStore(rootReducer);
 
 //adding users
 addUser(10, 'mahmoud', 'ADMIN');
 addUser(20, 'ahmed', 'USER');
 addUser(30, 'yasser', 'USER');
+addUser(40, 'karam', 'USER');
 
 //adding movies
-addMovie(0, 'Taxi Driver', 'a movie about a deppresed taxi driver', 10);
-addMovie(1, 'Inception', 'nobody actually knows what is going on', 10);
-addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10);
+//addMovie(0, 'Taxi Driver', 'a movie about a deppresed taxi driver', 10, './imgs/taxi-driver.jpg');
+addMovie(1, 'Inception', 'nobody actually knows what is going on', 10, './imgs/inception.jpg');
+addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10, './imgs/the-godfather.jpg');
 
 //deleting movies
-deleteMovie(1, 20);
+//deleteMovie(1, 10);
 
 //rating movies
-rateMovie(0, 8.5, 20);
-rateMovie(0, 9.7, 30);
+// rateMovie(0, 8.5, 20);
+// rateMovie(0, 9.7, 30);
+
 
 //get all movies
 console.log(getAllMovies());
 
 //add to favorites
-addToFavorites(10, 0);
+//addToFavorites(10, 0);
 
 //add to watchlist
 addToWatchlist(10, 1);
 
+//get overall movie rate
+store.subscribe(() => console.log(getOverAllRate(0)));;
 //find who rated a movie
-console.log(whoRatedMovie(0));
+store.subscribe(() => console.log(whoRatedMovie(0)));
 
-console.log(store.getState());
+store.subscribe(() => {console.log(store.getState())});
