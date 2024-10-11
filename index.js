@@ -115,7 +115,7 @@ const deleteMovie = (movieId, deletedBy) => {
         store.dispatch({
         type: 'DELETE_MOVIE',
         payload: {movieId, deletedBy}
-        }) : console.error('only admin can add movies');
+        }) : console.error('only admin can delete movies');
 };
 
 const rateMovie = (movieId, rating, ratedBy) => {
@@ -124,7 +124,7 @@ const rateMovie = (movieId, rating, ratedBy) => {
         store.dispatch({
         type: 'RATE_MOVIE',
         payload: {movieId, rating, ratedBy}
-    }) : console.error('only users can add movies');
+    }) : console.error('only users can rate movies');
 };
 
 const getMovie = id => store.getState().movies.find(movie => movie.id === id);
