@@ -8,7 +8,8 @@ const user = (state, action) => {
                         name: action.payload.name,
                         type: action.payload.type,
                         favorites: [],
-                        watchlist: []
+                        watchlist: [],
+                        watched: []
                     }; 
         case 'ADD_TO_FAVORITES':
             return state.userId === action.payload.userId ? 
@@ -29,6 +30,31 @@ const user = (state, action) => {
                 }
                 : state;
 
+        case 'WATCHED': //test
+            if(state.userId !== action.payload.userId) {
+                return state;
+            }
+            // check if the given movieId exist in the watched array
+            const movieExist = state.watched.some(m => m.movieId === action.payload.movieId);
+            // if exists update the movie.watchtime else add it as new movie
+            const updatedWatched = movieExist ?
+                //update the movie
+                state.watched.map(m =>
+                    m.movieId === action.payload.movieId ?
+                        {...m, watchedTime: m.watchedTime + action.payload.watchedTime}
+                        : m
+                )
+                // add the movie
+             :  [...state.watched, {
+                    movieId: action.payload.movieId,
+                    watchedTime: action.payload.watchedTime
+                }]
+            // the main return of the case is the user object with the updated watched array     
+            return {
+                ...state,
+                watched: updatedWatched
+            };
+                
         default:
             return state;
     }
@@ -43,6 +69,10 @@ const usersReducer = (state = [], action) => {
             
         case 'ADD_TO_WATCHLIST':           
             return state.map(u => user(u, action));
+        
+        case 'WATCHED':
+            return state.map(u => user(u, action)); //test
+
         default:
             return state;
     };
@@ -171,19 +201,32 @@ export const getOverAllRate = movieId => {
     };
 };
 
+const loadState = () => {
+    const serializedState = localStorage.getItem('rootReducer');
+    if(serializedState === null) return undefined;
+    return JSON.parse(serializedState);
+}
+const saveState = (state) => {
+    const serializedState = JSON.stringify(state);
+    localStorage.setItem('rootReducer', serializedState)
+};
+const cachedState = loadState();
 const rootReducer = combineReducers({ users: usersReducer, movies: movieReducer });
-export const store = createStore(rootReducer);
+export const store = createStore(rootReducer, cachedState);
+
+store.subscribe(() => saveState(store.getState()))
+
 
 //adding users
-addUser(10, 'mahmoud', 'ADMIN');
-addUser(20, 'ahmed', 'USER');
-addUser(30, 'yasser', 'USER');
-addUser(40, 'karam', 'USER');
+// addUser(10, 'mahmoud', 'ADMIN');
+// addUser(20, 'ahmed', 'USER');
+// addUser(30, 'yasser', 'USER');
+// addUser(40, 'karam', 'USER');
 
 //adding movies
-//addMovie(0, 'Taxi Driver', 'a movie about a deppresed taxi driver', 10, './imgs/taxi-driver.jpg');
-addMovie(1, 'Inception', 'nobody actually knows what is going on', 10, './imgs/inception.jpg');
-addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10, './imgs/the-godfather.jpg');
+//addMovie(0, 'Taxi Driver', 'a movie about a depresed taxi driver', 10, './imgs/taxi-driver.jpg');
+// addMovie(1, 'Inception', 'nobody actually knows what is going on', 10, './imgs/inception.jpg');
+// addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10, './imgs/the-godfather.jpg');
 
 //deleting movies
 //deleteMovie(1, 10);
@@ -194,17 +237,18 @@ addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10, './imgs/t
 
 
 //get all movies
-console.log(getAllMovies());
+//console.log(getAllMovies());
 
 //add to favorites
 //addToFavorites(10, 0);
 
 //add to watchlist
-addToWatchlist(10, 1);
+//addToWatchlist(10, 1);
 
 //get overall movie rate
-store.subscribe(() => console.log(getOverAllRate(0)));;
+//store.subscribe(() => console.log(getOverAllRate(0)));;
 //find who rated a movie
-store.subscribe(() => console.log(whoRatedMovie(0)));
+//store.subscribe(() => console.log(whoRatedMovie(0)));
 
 store.subscribe(() => {console.log(store.getState())});
+//console.log(store.getState())

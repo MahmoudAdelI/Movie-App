@@ -8,6 +8,17 @@
 </head>
 <body>
     <h1>MovieApp</h1>
+    
+    <form class="login">
+        <div class="input-row">
+            <input type="text" id="username" placeholder="Enter your username" required>
+        </div>
+        <div class="button-row">
+            <button type="submit" value="ADMIN" class="user">Admin</button>
+            <button type="submit" value="USER" class="user">User</button>
+        </div>
+    </form>
+    
     <header>
         <form class="add-movie">
             <label>Title</label>
@@ -23,6 +34,7 @@
         </form>
     </header>
     <main></main>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
     <script type="module" src="redux.js"></script>
     <script type="module" src="index.js"></script>
     <script type="module" src="app.js"></script>

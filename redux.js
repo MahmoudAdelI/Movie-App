@@ -1,5 +1,5 @@
-export const createStore = (reducer) => {
-    let state = reducer(undefined, {}); // Initialize state using the reducer
+export const createStore = (reducer, cachedState) => {
+    let state = cachedState || reducer(undefined, {}); // Initialize state using the reducer
     let listeners = [];
     
     const getState = () => state;
