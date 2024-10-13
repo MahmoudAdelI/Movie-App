@@ -1,4 +1,4 @@
-import { store, addUser, getAllMovies, getOverAllRate, addMovie, rateMovie } from "./index.js";
+import { store, addUser, getAllMovies, getOverAllRate, addMovie, rateMovie, whoWatchedMovie, addToWatched, updateWatched } from "./index.js";
 
 const login = document.querySelector('.login');
 const movie = document.querySelector('.add-movie');
@@ -11,7 +11,7 @@ const main = document.querySelector('main');
 
 login.addEventListener('submit', e => {
     e.preventDefault();
-    const userId = Math.floor(Math.random() * 10000000000);
+    const userId = String(Math.floor(Math.random() * 10000000000));
     const name = login.username.value.trim();
     const userType = e.submitter.value;
     addUser(userId, name, userType);
@@ -21,7 +21,7 @@ login.addEventListener('submit', e => {
 movie.addEventListener('submit', e => {
     e.preventDefault();
     const userId = store.getState().users[0].userId;
-    const movieId = Math.floor(Math.random() * 10000000000);
+    const movieId = String(Math.floor(Math.random() * 10000000000));
     const title = movieTitle.value.trim();
     const details = movieDescription.value.trim();
     const img = movieImage.value.trim();
@@ -30,24 +30,21 @@ movie.addEventListener('submit', e => {
 
 let time;
 main.addEventListener('click', (e) => {
+    const userId = store.getState().users[0].userId;
+    const movieId = e.target.getAttribute('data-id'); // because it returned as string
+
     if(e.target.classList.contains('play')) {
         time = new Date();
         console.log(`Started playing movie with ID: ${e.target.getAttribute('data-id')}`);
+        // ADD THE MOVIE TO WATCHED ARRAY IF NOT EXISTS
+        addToWatched(userId, movieId, time);
         };
     
-    if (e.target.classList.contains('pause')) {       
-            const userId = store.getState().users[0].userId;
+    if (e.target.classList.contains('pause')) {                   
             const endTime = new Date();
             const watchedTime = dateFns.differenceInSeconds(endTime , time); // to seconds...
-            const movieId = e.target.getAttribute('data-id')
-                store.dispatch({
-                    type: 'WATCHED',
-                    payload: {
-                        userId,
-                        movieId,
-                        watchedTime
-                    }
-                });
+            // UPDATE THE MOVIES IN WATCHED ARRAY
+            updateWatched(userId, movieId, watchedTime);
             console.log(`Paused movie with ID: ${movieId}, watched time: ${watchedTime}s`);
             time = null;
         };
@@ -57,13 +54,13 @@ main.addEventListener('click', (e) => {
 const render = () => {
     main.innerHTML = '';
     getAllMovies().forEach(movie => {
-        const overAllRate = getOverAllRate(movie.id);
+        const overAllRate = getOverAllRate(movie.movieId);
         const html = `
         <div class="movie-card">
         <img src="${movie.img}" alt="${movie.title}">
         <div class="playPause">
-            <button class="play" data-id="${movie.id}">Play</button>
-            <button class="pause" data-id="${movie.id}">Pause</button>
+            <button class="play" data-id="${movie.movieId}">Play</button>
+            <button class="pause" data-id="${movie.movieId}">Pause</button>
         </div>
             <div class="footer">
                 <div class="title">${movie.title}</div>

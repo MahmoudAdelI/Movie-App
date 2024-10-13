@@ -16,7 +16,7 @@ const user = (state, action) => {
                 {
                     ...state,
                     favorites: [...state.favorites, {
-                        id: action.payload.movieId
+                        movieId: action.payload.movieId
                     }]
                 }
                 : state;
@@ -25,36 +25,37 @@ const user = (state, action) => {
                 {
                     ...state,
                     watchlist: [...state.watchlist, {
-                        id: action.payload.movieId
+                        movieId: action.payload.movieId
                     }]
                 }
                 : state;
 
-        case 'WATCHED': //test
-            if(state.userId !== action.payload.userId) {
-                return state;
-            }
-            // check if the given movieId exist in the watched array
-            const movieExist = state.watched.some(m => m.movieId === action.payload.movieId);
-            // if exists update the movie.watchtime else add it as new movie
-            const updatedWatched = movieExist ?
-                //update the movie
-                state.watched.map(m =>
-                    m.movieId === action.payload.movieId ?
-                        {...m, watchedTime: m.watchedTime + action.payload.watchedTime}
-                        : m
-                )
-                // add the movie
-             :  [...state.watched, {
-                    movieId: action.payload.movieId,
-                    watchedTime: action.payload.watchedTime
-                }]
-            // the main return of the case is the user object with the updated watched array     
+        case 'ADD_TO_WATCHED':
+            // vaildate user and movie in dispatcher
             return {
                 ...state,
-                watched: updatedWatched
-            };
-                
+                watched: [...state.watched, {
+                    movieId: action.payload.movieId,
+                    startTime: action.payload.startTime,
+                    watchedTime: 0,
+                    pasuedTimes: 0
+                }]
+            }
+
+        case 'UPDATE_WATCHED': 
+                // vaildate user and movie in dispatcher
+                return {
+                    ...state,
+                    watched: state.watched.map(m =>
+                    m.movieId === action.payload.movieId ?
+                        {...m,
+                             watchedTime: m.watchedTime + action.payload.watchedTime,
+                            pasuedTimes: m.pasuedTimes + 1
+                            }
+                        : m
+                    )
+                }
+                  
         default:
             return state;
     }
@@ -69,8 +70,11 @@ const usersReducer = (state = [], action) => {
             
         case 'ADD_TO_WATCHLIST':           
             return state.map(u => user(u, action));
+
+        case 'ADD_TO_WATCHED':
+            return state.map(u => user(u, action));
         
-        case 'WATCHED':
+        case 'UPDATE_WATCHED':
             return state.map(u => user(u, action)); //test
 
         default:
@@ -82,7 +86,7 @@ const movie = (state, action) => {
     switch (action.type) {
         case'ADD_MOVIE':            
                 return {
-                        id: action.payload.movieId,
+                        movieId: action.payload.movieId,
                         title: action.payload.title,
                         img: action.payload.img,
                         details: action.payload.details,
@@ -91,16 +95,16 @@ const movie = (state, action) => {
                     };
                                               
         case 'RATE_MOVIE': 
-                return state.id === action.payload.movieId ?        
+                return state.movieId === action.payload.movieId ?        
                     {
                         ...state,
                         ratings: [...state.ratings, {
-                            id: action.payload.ratedBy,
+                            userId: action.payload.ratedBy,
                             rating: action.payload.rating
                         }]
                     } 
                     : state;
-                
+
         default:
             return state;
     }
@@ -112,10 +116,13 @@ const movieReducer = (state = [], action) => {
                 return [...state, movie(undefined, action)];                  
 
         case 'DELETE_MOVIE':   
-                return state.filter( movie => movie.id !== action.payload.movieId );
+                return state.filter( movie => movie.movieId !== action.payload.movieId );
 
         case 'RATE_MOVIE':
             return state.map(m => movie(m, action));
+
+        case 'WATCHERS':
+            return state.map(m => movie(m , action))
             
         default:
                 return state;
@@ -129,7 +136,7 @@ export const addUser = (userId, name, type) => {
     });
 };
 
-const getUser = id => store.getState().users.find(user => user.userId === id);
+const getUser = userId => store.getState().users.find(user => user.userId === userId);
 
 export const addMovie = (movieId, title, details, addedBy, img) => {
     const user = getUser(addedBy);
@@ -180,14 +187,36 @@ export const addToWatchlist = (userId, movieId) => {
         payload: {userId, movieId}
     }) : console.error('movie not found');
 };
-
+export const addToWatched = (userId, movieId, startTime) => {
+    const user = getUser(userId);
+    const movie = user.watched.some(m => m.movieId === movieId);
+     if(!movie) {
+        return store.dispatch({
+        type: 'ADD_TO_WATCHED',
+        payload: {movieId, startTime}
+    })
+    } ;  
+};
+export const updateWatched = (userId, movieId, watchedTime) => {
+    const user = getUser(userId);
+    const movie = user.watched.some(m => m.movieId === movieId);
+    if(movie) {
+        return store.dispatch({
+            type: 'UPDATE_WATCHED',
+            payload: {movieId, watchedTime}
+        })
+    };
+};
 export const getAllMovies = () => {
     return store.getState().movies;
 };
-
+export const whoWatchedMovie = movieId => { // EDIT THIS FUNCTION
+    const movie = getMovie(movieId);
+    return movie ? movie.watchers.map(w => w.userId) : console.error('movie not found');
+};
 export const whoRatedMovie = movieId => {
     const movie = getMovie(movieId);
-    return movie ? movie.ratings.map(r => r.id) : 'movie not found';
+    return movie ? movie.ratings.map(r => r.userId) : 'movie not found';
 };
 
 export const getOverAllRate = movieId => {
