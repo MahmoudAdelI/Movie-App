@@ -38,7 +38,9 @@ const user = (state, action) => {
                     movieId: action.payload.movieId,
                     startTime: action.payload.startTime,
                     watchedTime: 0,
-                    pasuedTimes: 0
+                    pasuedTimes: 0,
+                    completed: undefined,
+                    finishedIn: undefined
                 }]
             }
 
@@ -49,8 +51,10 @@ const user = (state, action) => {
                     watched: state.watched.map(m =>
                     m.movieId === action.payload.movieId ?
                         {...m,
-                             watchedTime: m.watchedTime + action.payload.watchedTime,
-                            pasuedTimes: m.pasuedTimes + 1
+                            watchedTime: m.watchedTime + action.payload.watchedTime,
+                            pasuedTimes: m.pasuedTimes + 1,
+                            completed: action.payload.completed,
+                            finishedIn: action.payload.finishedIn
                             }
                         : m
                     )
@@ -90,6 +94,7 @@ const movie = (state, action) => {
                         title: action.payload.title,
                         img: action.payload.img,
                         details: action.payload.details,
+                        duration: action.payload.duration,
                         ratings: [],
                         addedBy: action.payload.addedBy
                     };
@@ -138,12 +143,12 @@ export const addUser = (userId, name, type) => {
 
 const getUser = userId => store.getState().users.find(user => user.userId === userId);
 
-export const addMovie = (movieId, title, details, addedBy, img) => {
+export const addMovie = (movieId, title, details, addedBy, img, duration) => {
     const user = getUser(addedBy);
     return user.type === 'ADMIN' ? 
         store.dispatch({
         type: 'ADD_MOVIE',
-        payload: {movieId, title, details, addedBy, img}
+        payload: {movieId, title, details, addedBy, img, duration}
         }) : console.error('only admin can add movies');
 };
 
@@ -168,7 +173,7 @@ export const rateMovie = (movieId, rating, ratedBy) => {
     } else {console.error('movie not found')};
 };
 
-const getMovie = id => store.getState().movies.find(movie => movie.id === id);
+const getMovie = movieId => store.getState().movies.find(movie => movie.movieId === movieId);
 
 export const addToFavorites = (userId, movieId) => {
     const movie = getMovie(movieId);
@@ -187,6 +192,7 @@ export const addToWatchlist = (userId, movieId) => {
         payload: {userId, movieId}
     }) : console.error('movie not found');
 };
+
 export const addToWatched = (userId, movieId, startTime) => {
     const user = getUser(userId);
     const movie = user.watched.some(m => m.movieId === movieId);
@@ -197,23 +203,46 @@ export const addToWatched = (userId, movieId, startTime) => {
     })
     } ;  
 };
-export const updateWatched = (userId, movieId, watchedTime) => {
+
+export const updateWatched = (userId, movieId, watchedTime, endTime) => {
     const user = getUser(userId);
-    const movie = user.watched.some(m => m.movieId === movieId);
-    if(movie) {
+    const watchedMovie = user.watched.find(m => m.movieId === movieId);
+    const movie = getMovie(movieId);
+    if(watchedMovie) {
+        // if completed is already set we retrive the first value we don't need to refresh
+        // its value with every pause
+        const completed = watchedMovie.watchedTime + watchedTime >= movie.duration ?
+        watchedMovie.completed || `completed at ${endTime.toLocaleString()}` : false;
+        // same logic here with finishedIn
+        const finishedIn = completed ?
+        watchedMovie.finishedIn || dateFns.intervalToDuration({start: watchedMovie.startTime, end: endTime}) : false;
+
         return store.dispatch({
             type: 'UPDATE_WATCHED',
-            payload: {movieId, watchedTime}
+            payload: {movieId, watchedTime, completed, finishedIn}
         })
     };
 };
+
 export const getAllMovies = () => {
     return store.getState().movies;
 };
-export const whoWatchedMovie = movieId => { // EDIT THIS FUNCTION
-    const movie = getMovie(movieId);
-    return movie ? movie.watchers.map(w => w.userId) : console.error('movie not found');
+
+export const whoWatchedMovie = movieId => { // TEST
+    return store.getState().users.filter(u => u.watched.some(m => m.movieId === movieId))
 };
+
+export const getWatchedTime = (userId, movieId) => {
+    const user = getUser(userId);
+    const movie = user.watched.find(m => m.movieId === movieId);
+    return movie ?
+    movie.watchedTime : console.error('movie not found');
+};
+
+export const getRatedMovies = userId => {
+    return store.getState().movies.filter(m => m.ratings.some(r => r.userId === userId))
+};
+
 export const whoRatedMovie = movieId => {
     const movie = getMovie(movieId);
     return movie ? movie.ratings.map(r => r.userId) : 'movie not found';
