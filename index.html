@@ -2,23 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./style.css">
     <title>MovieApp</title>
 </head>
 <body>
     <h1>MovieApp</h1>
-    
-    <form class="login">
-        <div class="input-row">
-            <input type="text" id="username" placeholder="Enter your username" required>
-        </div>
-        <div class="button-row">
-            <button type="submit" value="ADMIN" class="user">Admin</button>
-            <button type="submit" value="USER" class="user">User</button>
-        </div>
-    </form>
-    
+    <div class="form-container">
+        <form class="login">
+            <div class="input-row">
+                <input type="text" id="username" placeholder="Enter your username" required>
+            </div>
+            <div class="button-row">
+                <button type="submit" value="ADMIN" class="user">Admin</button>
+                <button type="submit" value="USER" class="user">User</button>
+            </div>
+        </form>
+    </div>
     <header>
         <form class="add-movie">
             <label>Title</label>
@@ -27,10 +28,10 @@
             <label>Description</label>
             <input class="description" id="description" required>
 
-            <label>Image</label>
-            <input class="image" id="image" required>
+            <!-- <label>Image</label>
+            <input class="image" id="image" required> -->
             
-            <label>Duration</label>
+            <label>Duration in minutes</label>
             <input class="duration" id="duration" required>
             
             <button type="submit">Add</button>

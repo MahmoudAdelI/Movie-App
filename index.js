@@ -11,6 +11,7 @@ const user = (state, action) => {
                         watchlist: [],
                         watched: []
                     }; 
+                    
         case 'ADD_TO_FAVORITES':
             return state.userId === action.payload.userId ? 
                 {
@@ -20,6 +21,17 @@ const user = (state, action) => {
                     }]
                 }
                 : state;
+
+        case 'REMOVE_FROM_FAVORITES':
+            return state.userId === action.payload.userId ?
+            {
+                ...state,
+                favorites: state.favorites.filter(m =>
+                    m.movieId !== action.payload.movieId
+                )
+            }
+            : state;
+
         case 'ADD_TO_WATCHLIST':            
             return state.userId === action.payload.userId ? 
                 {
@@ -29,6 +41,16 @@ const user = (state, action) => {
                     }]
                 }
                 : state;
+
+        case 'REMOVE_FROM_WATCHLIST':
+            return state.userId === action.payload.userId ?
+            {
+                ...state,
+                watchlist: state.watchlist.filter(m => 
+                    m.movieId !== action.payload.movieId 
+                )
+            } 
+            : state;
 
         case 'ADD_TO_WATCHED':
             // vaildate user and movie in dispatcher
@@ -40,7 +62,8 @@ const user = (state, action) => {
                     watchedTime: 0,
                     pasuedTimes: 0,
                     completed: undefined,
-                    finishedIn: undefined
+                    finishedIn: undefined,
+                    // isPlaying: false
                 }]
             }
 
@@ -54,11 +77,21 @@ const user = (state, action) => {
                             watchedTime: m.watchedTime + action.payload.watchedTime,
                             pasuedTimes: m.pasuedTimes + 1,
                             completed: action.payload.completed,
-                            finishedIn: action.payload.finishedIn
+                            finishedIn: action.payload.finishedIn,
                             }
                         : m
                     )
-                }
+                };
+
+        // case 'TOGGLE_PLAY_PAUSE':
+        //     return {
+        //         ...state,
+        //         watched: state.watched.map(m =>
+        //             m.movieId === action.payload.movieId ?
+        //             {...m, isPlaying: !m.isPlaying} 
+        //             : m
+        //         )
+        //     };
                   
         default:
             return state;
@@ -71,15 +104,24 @@ const usersReducer = (state = [], action) => {
 
         case 'ADD_TO_FAVORITES':        
             return state.map(u => user(u, action));
+
+        case 'REMOVE_FROM_FAVORITES':
+            return state.map(u => user(u, action));
             
         case 'ADD_TO_WATCHLIST':           
+            return state.map(u => user(u, action));
+
+        case 'REMOVE_FROM_WATCHLIST':
             return state.map(u => user(u, action));
 
         case 'ADD_TO_WATCHED':
             return state.map(u => user(u, action));
         
         case 'UPDATE_WATCHED':
-            return state.map(u => user(u, action)); //test
+            return state.map(u => user(u, action)); 
+
+        case 'TOGGLE_PLAY_PAUSE':
+            return state.map(u => user(u, action));
 
         default:
             return state;
@@ -92,7 +134,7 @@ const movie = (state, action) => {
                 return {
                         movieId: action.payload.movieId,
                         title: action.payload.title,
-                        img: action.payload.img,
+                        // img: action.payload.img,
                         details: action.payload.details,
                         duration: action.payload.duration,
                         ratings: [],
@@ -143,12 +185,12 @@ export const addUser = (userId, name, type) => {
 
 const getUser = userId => store.getState().users.find(user => user.userId === userId);
 
-export const addMovie = (movieId, title, details, addedBy, img, duration) => {
+export const addMovie = (movieId, title, details, addedBy, duration) => {
     const user = getUser(addedBy);
     return user.type === 'ADMIN' ? 
         store.dispatch({
         type: 'ADD_MOVIE',
-        payload: {movieId, title, details, addedBy, img, duration}
+        payload: {movieId, title, details, addedBy, duration}
         }) : console.error('only admin can add movies');
 };
 
@@ -175,22 +217,38 @@ export const rateMovie = (movieId, rating, ratedBy) => {
 
 const getMovie = movieId => store.getState().movies.find(movie => movie.movieId === movieId);
 
-export const addToFavorites = (userId, movieId) => {
-    const movie = getMovie(movieId);
-    return movie ?
-        store.dispatch({
+export const toggleFavorites = (userId, movieId) => {
+    const user = getUser(userId);
+    const movie = user.favorites.some(m => m.movieId === movieId);
+    if(!movie) {
+        return store.dispatch({
         type: 'ADD_TO_FAVORITES',
+        payload: {userId, movieId} 
+    })
+    } else {
+        console.error('movie already in the favorites')
+        return store.dispatch({
+        type: 'REMOVE_FROM_FAVORITES',
         payload: {userId, movieId}
-    }) : console.error('movie not found');
+    })
+    }
 };
 
-export const addToWatchlist = (userId, movieId) => {
-    const movie = getMovie(movieId);
-    return movie ?
-        store.dispatch({
-        type: 'ADD_TO_WATCHLIST',
-        payload: {userId, movieId}
-    }) : console.error('movie not found');
+export const toggleWatchlist = (userId, movieId) => {
+    const user = getUser(userId);
+    const movie = user.watchlist.some(m => m.movieId === movieId);
+    if(!movie) {
+        return store.dispatch({
+            type: 'ADD_TO_WATCHLIST',
+            payload: {userId, movieId}
+        })
+    } else {
+        console.error('movie already in the watchlist')
+        return store.dispatch({
+            type: 'REMOVE_FROM_WATCHLIST',
+            payload: {userId, movieId}
+        })
+    }
 };
 
 export const addToWatched = (userId, movieId, startTime) => {
@@ -223,12 +281,17 @@ export const updateWatched = (userId, movieId, watchedTime, endTime) => {
         })
     };
 };
-
+// export const togglePlayPause = movieId => {
+//     store.dispatch({
+//         type: 'TOGGLE_PLAY_PAUSE',
+//         payload: {movieId}
+//     })
+// }
 export const getAllMovies = () => {
     return store.getState().movies;
 };
 
-export const whoWatchedMovie = movieId => { // TEST
+export const getUsersWhoWatchedMovie = movieId => { // TEST
     return store.getState().users.filter(u => u.watched.some(m => m.movieId === movieId))
 };
 
@@ -243,7 +306,7 @@ export const getRatedMovies = userId => {
     return store.getState().movies.filter(m => m.ratings.some(r => r.userId === userId))
 };
 
-export const whoRatedMovie = movieId => {
+export const getUsersWhoRatedMovie = movieId => {
     const movie = getMovie(movieId);
     return movie ? movie.ratings.map(r => r.userId) : 'movie not found';
 };
