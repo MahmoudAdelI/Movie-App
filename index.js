@@ -63,7 +63,7 @@ const user = (state, action) => {
                     pasuedTimes: 0,
                     completed: undefined,
                     finishedIn: undefined,
-                    // isPlaying: false
+                    isPlaying: true
                 }]
             }
 
@@ -78,20 +78,21 @@ const user = (state, action) => {
                             pasuedTimes: m.pasuedTimes + 1,
                             completed: action.payload.completed,
                             finishedIn: action.payload.finishedIn,
+                            isPlaying: false
                             }
                         : m
                     )
                 };
 
-        // case 'TOGGLE_PLAY_PAUSE':
-        //     return {
-        //         ...state,
-        //         watched: state.watched.map(m =>
-        //             m.movieId === action.payload.movieId ?
-        //             {...m, isPlaying: !m.isPlaying} 
-        //             : m
-        //         )
-        //     };
+        case 'TOGGLE_PLAY_PAUSE':
+            return {
+                ...state,
+                watched: state.watched.map(m =>
+                    m.movieId === action.payload.movieId ?
+                    {...m, isPlaying: true} 
+                    : m
+                )
+            };
                   
         default:
             return state;
@@ -152,6 +153,19 @@ const movie = (state, action) => {
                     } 
                     : state;
 
+        case 'UPDATE_RATINGS':
+            return state.movieId === action.payload.movieId ?
+            {
+                ...state,
+                ratings: state.ratings.map(r=>
+                    r.userId === action.payload.ratedBy ?
+                    {
+                        ...r,
+                        rating: action.payload.rating
+                    } : r
+                 )
+            } : state;           
+
         default:
             return state;
     }
@@ -168,7 +182,7 @@ const movieReducer = (state = [], action) => {
         case 'RATE_MOVIE':
             return state.map(m => movie(m, action));
 
-        case 'WATCHERS':
+        case 'UPDATE_RATINGS':
             return state.map(m => movie(m , action))
             
         default:
@@ -206,16 +220,23 @@ export const deleteMovie = (movieId, deletedBy) => {
 export const rateMovie = (movieId, rating, ratedBy) => {
     const movie = getMovie(movieId);
     const user = getUser(ratedBy);
-    if(movie) {
-        return user && user.type === 'USER' ?
+    const isRated = movie.ratings.some(m => m.userId === ratedBy);
+    if (isRated) { // if user added a new rating 
+        return store.dispatch({
+            type: 'UPDATE_RATINGS',
+            payload: {movieId, rating, ratedBy}
+        })
+    };
+
+    return user && user.type === 'USER' ? // if user hasn't rated before
             store.dispatch({
             type: 'RATE_MOVIE',
             payload: {movieId, rating, ratedBy}
         }) : console.error('only users can rate movies');
-    } else {console.error('movie not found')};
+
 };
 
-const getMovie = movieId => store.getState().movies.find(movie => movie.movieId === movieId);
+export const getMovie = movieId => store.getState().movies.find(movie => movie.movieId === movieId);
 
 export const toggleFavorites = (userId, movieId) => {
     const user = getUser(userId);
@@ -253,13 +274,20 @@ export const toggleWatchlist = (userId, movieId) => {
 
 export const addToWatched = (userId, movieId, startTime) => {
     const user = getUser(userId);
-    const movie = user.watched.some(m => m.movieId === movieId);
+    const movie = user.watched.find(m => m.movieId === movieId);
      if(!movie) {
         return store.dispatch({
         type: 'ADD_TO_WATCHED',
         payload: {movieId, startTime}
     })
-    } ;  
+    }; 
+    if(!movie.isPlaying) { // to toggle the play btn
+        // console.log('isPlaying has been toggled');
+        return store.dispatch({
+            type: 'TOGGLE_PLAY_PAUSE',
+            payload: {movieId}
+        })
+    }
 };
 
 export const updateWatched = (userId, movieId, watchedTime, endTime) => {
@@ -267,7 +295,7 @@ export const updateWatched = (userId, movieId, watchedTime, endTime) => {
     const watchedMovie = user.watched.find(m => m.movieId === movieId);
     const movie = getMovie(movieId);
     if(watchedMovie) {
-        // if completed is already set we retrive the first value we don't need to refresh
+        // if completed is already set we retrive the first completed date, we don't need to refresh
         // its value with every pause
         const completed = watchedMovie.watchedTime + watchedTime >= movie.duration ?
         watchedMovie.completed || `completed at ${endTime.toLocaleString()}` : false;
@@ -281,17 +309,12 @@ export const updateWatched = (userId, movieId, watchedTime, endTime) => {
         })
     };
 };
-// export const togglePlayPause = movieId => {
-//     store.dispatch({
-//         type: 'TOGGLE_PLAY_PAUSE',
-//         payload: {movieId}
-//     })
-// }
+
 export const getAllMovies = () => {
     return store.getState().movies;
 };
 
-export const getUsersWhoWatchedMovie = movieId => { // TEST
+export const getUsersWhoWatchedMovie = movieId => { 
     return store.getState().users.filter(u => u.watched.some(m => m.movieId === movieId))
 };
 
@@ -337,39 +360,4 @@ export const store = createStore(rootReducer, cachedState);
 
 store.subscribe(() => saveState(store.getState()))
 
-
-//adding users
-// addUser(10, 'mahmoud', 'ADMIN');
-// addUser(20, 'ahmed', 'USER');
-// addUser(30, 'yasser', 'USER');
-// addUser(40, 'karam', 'USER');
-
-//adding movies
-//addMovie(0, 'Taxi Driver', 'a movie about a depresed taxi driver', 10, './imgs/taxi-driver.jpg');
-// addMovie(1, 'Inception', 'nobody actually knows what is going on', 10, './imgs/inception.jpg');
-// addMovie(2, 'The Godfather', 'it is about mafia and everone dies', 10, './imgs/the-godfather.jpg');
-
-//deleting movies
-//deleteMovie(1, 10);
-
-//rating movies
-// rateMovie(0, 8.5, 20);
-// rateMovie(0, 9.7, 30);
-
-
-//get all movies
-//console.log(getAllMovies());
-
-//add to favorites
-//addToFavorites(10, 0);
-
-//add to watchlist
-//addToWatchlist(10, 1);
-
-//get overall movie rate
-//store.subscribe(() => console.log(getOverAllRate(0)));;
-//find who rated a movie
-//store.subscribe(() => console.log(whoRatedMovie(0)));
-
 store.subscribe(() => {console.log(store.getState())});
-//console.log(store.getState())

@@ -121,7 +121,7 @@ img {
     top: 3px;
     left: 3px;
     background-image: linear-gradient( rgba(0, 0, 0, .7), rgba(0, 0, 0, 0));
-    transition: .6s ease;
+    transition: .4s ease;
 }
 .stars-container:hover {
     opacity: 1;
@@ -133,20 +133,20 @@ img {
     top: 20px;
     left: 9%
 }
-.stars input {
-    display: none;
-  }
-  .stars label {
+
+.stars label {
     float: right;
     transition: all 0.2s ease;
   }
-.stars input:not(:checked) ~ label:hover,
-.stars input:not(:checked) ~ label:hover ~ label{
+.stars label:hover,
+.stars label:hover ~ label{
     color: #4b9924;
 }
-.stars input:checked ~ label {
-    color: #4b9924;
+.stars .selected,
+.stars .selected ~ label {
+    color: #4b9924; 
 }
+
 
 .playPause {
     font-size: 30px;
