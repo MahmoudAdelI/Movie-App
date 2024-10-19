@@ -8,20 +8,34 @@
     <title>MovieApp</title>
 </head>
 <body>
-    <h1>MovieApp</h1>
-    <div class="form-container">
-        <form class="login">
-            <div class="input-row">
-                <input type="text" id="username" placeholder="Enter your username" required>
+    <navbar class="navbar">
+        <h1>MovieApp</h1>
+        <div class="items">
+            <div class="logout hidden">Logout</div>
+            <div class="register">Register</div>
+            <div class="login">Login</div>
+        </div>
+    </navbar>
+    
+    <div class="login-form-container">
+        <form class="login-form">
+            <input type="text" name="username" placeholder="Enter your username" required>
+            <button type="submit" class="form-btn">Login</button>
+        </form>
+    </div>
+    <div class="register-form-container hidden">
+        <form class="register-form ">
+            <div class="username">
+                <input type="text" name="username" placeholder="Enter your username" required>
             </div>
             <div class="button-row">
-                <button type="submit" value="ADMIN" class="user">Admin</button>
-                <button type="submit" value="USER" class="user">User</button>
+                <button type="submit" value="ADMIN" class="form-btn">Admin</button>
+                <button type="submit" value="USER" class="form-btn">User</button>
             </div>
         </form>
     </div>
-    <header>
-        <form class="add-movie">
+    
+        <form class="add-movie hidden">
             <label>Title</label>
             <input class="title" id="title" required>
 
@@ -36,11 +50,13 @@
             
             <button type="submit">Add</button>
         </form>
-    </header>
+    
     <main></main>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
     <script type="module" src="redux.js"></script>
-    <script type="module" src="index.js"></script>
+    <script type="module" src="state.js"></script>
+    <script type="module" src="setters.js"></script>
+    <script type="module" src="getters.js"></script>
     <script type="module" src="app.js"></script>
 </body>
 </html>

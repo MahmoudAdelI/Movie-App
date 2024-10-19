@@ -190,158 +190,51 @@ const movieReducer = (state = [], action) => {
     };
 };
 
-export const addUser = (userId, name, type) => {
-    return store.dispatch({
-        type: 'ADD_USER',
-        payload: {userId, name, type}
-    });
-};
-
-const getUser = userId => store.getState().users.find(user => user.userId === userId);
-
-export const addMovie = (movieId, title, details, addedBy, duration) => {
-    const user = getUser(addedBy);
-    return user.type === 'ADMIN' ? 
-        store.dispatch({
-        type: 'ADD_MOVIE',
-        payload: {movieId, title, details, addedBy, duration}
-        }) : console.error('only admin can add movies');
-};
-
-export const deleteMovie = (movieId, deletedBy) => {
-    const user = getUser(deletedBy);
-    return user.type === 'ADMIN' ?
-        store.dispatch({
-        type: 'DELETE_MOVIE',
-        payload: {movieId, deletedBy}
-        }) : console.error('only admin can delete movies');
-};
-
-export const rateMovie = (movieId, rating, ratedBy) => {
-    const movie = getMovie(movieId);
-    const user = getUser(ratedBy);
-    const isRated = movie.ratings.some(m => m.userId === ratedBy);
-    if (isRated) { // if user added a new rating 
-        return store.dispatch({
-            type: 'UPDATE_RATINGS',
-            payload: {movieId, rating, ratedBy}
-        })
-    };
-
-    return user && user.type === 'USER' ? // if user hasn't rated before
-            store.dispatch({
-            type: 'RATE_MOVIE',
-            payload: {movieId, rating, ratedBy}
-        }) : console.error('only users can rate movies');
-
-};
-
-export const getMovie = movieId => store.getState().movies.find(movie => movie.movieId === movieId);
-
-export const toggleFavorites = (userId, movieId) => {
-    const user = getUser(userId);
-    const movie = user.favorites.some(m => m.movieId === movieId);
-    if(!movie) {
-        return store.dispatch({
-        type: 'ADD_TO_FAVORITES',
-        payload: {userId, movieId} 
-    })
-    } else {
-        console.error('movie already in the favorites')
-        return store.dispatch({
-        type: 'REMOVE_FROM_FAVORITES',
-        payload: {userId, movieId}
-    })
+const undoable = (reducer) => {
+    // this is the shape of my final state
+    const initialState = {
+        past: [],
+        present: reducer(undefined, {}),
+        future: []
     }
-};
+    // Return a reducer that handles undo and redo
+    return (state = initialState, action) => {
+        const {past, present, future} = state;
 
-export const toggleWatchlist = (userId, movieId) => {
-    const user = getUser(userId);
-    const movie = user.watchlist.some(m => m.movieId === movieId);
-    if(!movie) {
-        return store.dispatch({
-            type: 'ADD_TO_WATCHLIST',
-            payload: {userId, movieId}
-        })
-    } else {
-        console.error('movie already in the watchlist')
-        return store.dispatch({
-            type: 'REMOVE_FROM_WATCHLIST',
-            payload: {userId, movieId}
-        })
-    }
-};
+        switch (action.type) {
+            case 'UNDO':
+                const previous = past[past.length - 1]; 
+                const newPast = past.slice(0, past.length - 1); 
+                return {
+                    past: newPast, // remove the last state from the past
+                    present: previous, // the last state in the past
+                    future: [present, ...future] // add the present state to the future
+                };
 
-export const addToWatched = (userId, movieId, startTime) => {
-    const user = getUser(userId);
-    const movie = user.watched.find(m => m.movieId === movieId);
-     if(!movie) {
-        return store.dispatch({
-        type: 'ADD_TO_WATCHED',
-        payload: {movieId, startTime}
-    })
-    }; 
-    if(!movie.isPlaying) { // to toggle the play btn
-        // console.log('isPlaying has been toggled');
-        return store.dispatch({
-            type: 'TOGGLE_PLAY_PAUSE',
-            payload: {movieId}
-        })
-    }
-};
-
-export const updateWatched = (userId, movieId, watchedTime, endTime) => {
-    const user = getUser(userId);
-    const watchedMovie = user.watched.find(m => m.movieId === movieId);
-    const movie = getMovie(movieId);
-    if(watchedMovie) {
-        // if completed is already set we retrive the first completed date, we don't need to refresh
-        // its value with every pause
-        const completed = watchedMovie.watchedTime + watchedTime >= movie.duration ?
-        watchedMovie.completed || `completed at ${endTime.toLocaleString()}` : false;
-        // same logic here with finishedIn
-        const finishedIn = completed ?
-        watchedMovie.finishedIn || dateFns.intervalToDuration({start: watchedMovie.startTime, end: endTime}) : false;
-
-        return store.dispatch({
-            type: 'UPDATE_WATCHED',
-            payload: {movieId, watchedTime, completed, finishedIn}
-        })
-    };
-};
-
-export const getAllMovies = () => {
-    return store.getState().movies;
-};
-
-export const getUsersWhoWatchedMovie = movieId => { 
-    return store.getState().users.filter(u => u.watched.some(m => m.movieId === movieId))
-};
-
-export const getWatchedTime = (userId, movieId) => {
-    const user = getUser(userId);
-    const movie = user.watched.find(m => m.movieId === movieId);
-    return movie ?
-    movie.watchedTime : console.error('movie not found');
-};
-
-export const getRatedMovies = userId => {
-    return store.getState().movies.filter(m => m.ratings.some(r => r.userId === userId))
-};
-
-export const getUsersWhoRatedMovie = movieId => {
-    const movie = getMovie(movieId);
-    return movie ? movie.ratings.map(r => r.userId) : 'movie not found';
-};
-
-export const getOverAllRate = movieId => {
-    const movie = getMovie(movieId);
-    if(movie && movie.ratings.length > 0) { 
-        const ratings = movie.ratings.map(r => r.rating);
-        const ratingsSum = ratings.reduce((acc, current)=> acc + current, 0);
-        return Math.round(ratingsSum / ratings.length) + '/10';
-    } else {
-        return 0 + '/10'
+            case 'REDO':
+                const next = future[0];
+                const newFuture = future.slice(1);
+                return {
+                    past: [...past, present], // add the present state to the past
+                    present: next, // the first state in the future
+                    future: newFuture // remove the first state from the future  
+                };
+            
+            default:
+                /*if the action was anything else we pass it to the reducer with the
+                present state and check if the new state returned from the reducer is
+                equal to the present state we have, we return the state as it is.
+                if not return the state with the new present state and add the last state to the past */
+                const newPresent = reducer(present, action)
+                if(present === newPresent) {
+                    return state;
+                }
+                return {
+                    past: [...past, present],
+                    present: newPresent,
+                    future: []
+                };
+        };
     };
 };
 
@@ -350,14 +243,17 @@ const loadState = () => {
     if(serializedState === null) return undefined;
     return JSON.parse(serializedState);
 }
+
 const saveState = (state) => {
     const serializedState = JSON.stringify(state);
     localStorage.setItem('rootReducer', serializedState)
 };
+
 const cachedState = loadState();
 const rootReducer = combineReducers({ users: usersReducer, movies: movieReducer });
-export const store = createStore(rootReducer, cachedState);
+const undoableReducer = undoable(rootReducer);
+export const store = createStore(undoableReducer, cachedState);
 
-store.subscribe(() => saveState(store.getState()))
 
+store.subscribe(() => saveState(store.getState()));
 store.subscribe(() => {console.log(store.getState())});
