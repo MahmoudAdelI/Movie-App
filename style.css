@@ -286,7 +286,7 @@ img {
     padding: 1rem 2rem;
     border-radius: 2rem;
     cursor: pointer;
-    top: 90vh;
+    top: 80vh;
     left: 2vh;
     animation: moveLeft .2s ease-out;
 }
