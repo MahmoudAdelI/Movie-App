@@ -165,12 +165,16 @@ main {
         display: grid;
         grid-template-columns: 1fr;
         justify-items: center;
+        
     }
     html {
         font-size: 6px;
     }
     body {
         font-size: 10px;
+    }
+    .stars-container {
+        opacity: 1 !important;
     }
 }
 .movie-card {
