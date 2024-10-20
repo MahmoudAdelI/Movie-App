@@ -10,6 +10,7 @@ body {
     background-color: #171717;
     color: white;
     position: relative;
+    font-size: 16px;
 }
 
 
@@ -18,7 +19,7 @@ body {
     z-index: 2;
     justify-content: space-between;
     padding: 2rem;
-    border-bottom: 1px solid #5a5a5a;
+    border-bottom: .1rem solid #5a5a5a;
     max-width: 85vw;
     margin: 0 auto;
     box-sizing: border-box;
@@ -31,6 +32,7 @@ body {
     display: flex;
     align-items: center;
     gap: 1.6rem;
+
 }
 .navbar .items div:hover {
     color: #4b9924;
@@ -50,7 +52,7 @@ body {
 .register-form,
 .login-form {
     background-color: #1d1d1d;
-    border-radius: 1.rem;
+    border-radius: 1rem;
     border: .1rem solid #a1a1a133;
     margin: 40vh auto;
     display: flex;
@@ -71,9 +73,11 @@ body {
     color: #5a5a5a;
     caret-color: #5a5a5a;
     outline: 0;
+    font-size: inherit;
 }
 .login-form button {
     margin: 0 auto;
+    font-size: inherit;
 }
 .button-row{
     display: flex;
@@ -160,6 +164,12 @@ main {
         display: grid;
         grid-template-columns: 1fr;
         justify-items: center;
+    }
+    html {
+        font-size: 6px;
+    }
+    body {
+        font-size: 10px;
     }
 }
 .movie-card {

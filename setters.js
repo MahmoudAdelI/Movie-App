@@ -81,7 +81,6 @@ export const toggleWatchlist = (userId, movieId) => {
 
 export const addToWatched = (userId, movieId, startTime) => {
     const user = getUser(userId);
-    console.log(user);
     const movie = user.watched.find(m => m.movieId === movieId);
      if(!movie) {
         return store.dispatch({
