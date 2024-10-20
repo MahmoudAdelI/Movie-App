@@ -1,3 +1,6 @@
+html {
+    font-size: 10px;
+}
 * {
     margin: 0;
     padding: 0;
@@ -6,6 +9,7 @@ body {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     background-color: #171717;
     color: white;
+    position: relative;
 }
 
 
@@ -13,7 +17,7 @@ body {
     display: flex;
     z-index: 2;
     justify-content: space-between;
-    padding: 20px;
+    padding: 2rem;
     border-bottom: 1px solid #5a5a5a;
     max-width: 85vw;
     margin: 0 auto;
@@ -26,7 +30,7 @@ body {
     z-index: 2;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.6rem;
 }
 .navbar .items div:hover {
     color: #4b9924;
@@ -46,23 +50,23 @@ body {
 .register-form,
 .login-form {
     background-color: #1d1d1d;
-    border-radius: 12px;
-    border: 1px solid #a1a1a133;
+    border-radius: 1.rem;
+    border: .1rem solid #a1a1a133;
     margin: 40vh auto;
     display: flex;
     flex-direction: column;
-    gap: 25px;
-    width: 300px;
-    padding: 40px;
+    gap: 2.5rem;
+    width: 30rem;
+    padding: 4rem;
     transition: .3s ease-out;
 }
 .username input,
 .login-form input {
     width: 100%;
     background-color: #1d1d1d;
-    padding: 10px 10px;
-    border: 1px solid #a1a1a133;
-    border-radius: 5px;
+    padding: 1rem 1rem;
+    border: .1rem solid #a1a1a133;
+    border-radius: .5rem;
     box-sizing: border-box;
     color: #5a5a5a;
     caret-color: #5a5a5a;
@@ -79,10 +83,10 @@ body {
     background-color: #1d1d1d;
     color: #5a5a5a;
     cursor: pointer;
-    border-radius: 8px;
-    border: 1px solid #282828;
-    padding: 8px 16px;
-    width: 80px;
+    border-radius: .8rem;
+    border: .1rem solid #282828;
+    padding: .8rem 1.6rem;
+    width: 8rem;
 }
 .form-btn:hover {
     background-color: #4b9924;
@@ -93,7 +97,7 @@ body {
     text-align: center;
     margin: 0 auto;
     width: 45vw;
-    padding: 40px 0;
+    padding: 4rem 0;
 }
 .add-movie label {
     text-align: left;
@@ -103,11 +107,11 @@ body {
 .add-movie input {
     width: 100%;
     display: block;
-    padding: 6px 10px;
-    margin: 10px 0;
+    padding: .6rem 1rem;
+    margin: 1rem 0;
     background-color: #282828;
     border: 0;
-    border-radius: 5px;
+    border-radius: .5rem;
     box-sizing: border-box;
     outline: 0;
     color: #5a5a5a;
@@ -117,27 +121,27 @@ body {
     background-color: #1d1d1d;
     color: #5a5a5a;
     cursor: pointer;
-    border-radius: 8px;
-    border: 1px solid #282828;
-    padding: 8px 16px;
-    margin-top: 20px;
+    border-radius: .8rem;
+    border: .1rem solid #282828;
+    padding: .8rem 1.6rem;
+    margin-top: 2rem;
 }
 
 main {
     background-color: #1d1d1d;
     display: grid;
-    /* grid-template-columns:  repeat(4, auto); */
-    grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+    grid-template-columns:  repeat(4, 1fr);
+    /* grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); */
     justify-items: center;
     width: 85vw;
-    gap: 40px;
-    margin: 100px auto;
-    padding: 20px;
-    border-radius: 5px;
+    gap: 4rem;
+    margin: 10rem auto;
+    padding: 2rem;
+    border-radius: .5rem;
     box-sizing: border-box;
-    border: 1px solid #282828;
+    border: .1rem solid #282828;
 }
-/* @media(max-width: 1285px) {
+@media(max-width: 1285px) {
     main {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -157,24 +161,24 @@ main {
         grid-template-columns: 1fr;
         justify-items: center;
     }
-} */
+}
 .movie-card {
     position: relative;
 }
 
 img {
-    border: 4px solid white;
-    border-radius: 8px;
+    border: .4rem solid white;
+    border-radius: .8rem;
     object-fit: cover;
-    width: 200px;
+    width: 20rem;
 }
 .stars-container {
     opacity: 0;
-    height: 300px;
-    width: 200px;
+    height: 30rem;
+    width: 20rem;
     position: absolute;
-    top: 3px;
-    left: 3px;
+    top: .3rem;
+    left: .3rem;
     background-image: linear-gradient( rgba(0, 0, 0, .7), rgba(0, 0, 0, 0));
     transition: .4s ease;
 }
@@ -182,10 +186,10 @@ img {
     opacity: 1;
 }
 .stars {
-    margin-bottom: 5px;
-    font-size: 15px;
+    margin-bottom: .5rem;
+    font-size: 1.5rem;
     position: absolute;
-    top: 20px;
+    top: 2rem;
     left: 9%
 }
 
@@ -203,7 +207,7 @@ img {
 }
 
 .playPause {
-    font-size: 30px;
+    font-size: 3rem;
     position: absolute;
     top: 70%;
     left: 50%;
@@ -216,9 +220,7 @@ img {
 .footer {
     display: flex;
     justify-content: space-between;
-    padding: 5px 5px;
-    /* border: 2px solid blueviolet;
-    border-radius: 8px; */
+    padding: .5rem;
 }
 .title-rate {
     display: flex;
@@ -227,50 +229,70 @@ img {
     text-transform: capitalize;
 }
 .rate {
-    font-size: 10px;
+    font-size: 1rem;
 }
 .icons {
     display: flex;
     justify-content: space-around;
     align-items: start;
-    flex-basis: 45px;
-    font-size: 15px;
+    flex-basis: 4.5rem;
+    font-size: 1.5rem;
     cursor: pointer;
-    padding-top: 2px;
+    padding-top: .2rem;
 }
 .icons i:hover {
     color: #4b9924;
 }
 .icons i:active {
-    transform: scale(1.1, 1.1) translateY(-1px);
+    transform: scale(1.1, 1.1) translateY(-.1rem);
     transition: all .1s ease-out;
 }
 
 .icon-clicked {
     color: #4b9924;
 }
-.delete {
-    width: 25px;
-    height: 25px;
+
+.delete i {
+    font-size: 1rem;
+    position: absolute;
+    top: 2rem;
+    left: -3.5rem;
+    padding: 1rem;
     border-radius: 50%;
     background-color: red;
-    position: absolute;
-    top: 20px;
-    left: -32px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all .2s;
+    transition: all .4s;
     cursor: pointer;
 }
-.delete i {
-    font-size: 10px;
-}
 .delete:hover {
-    transform: translateY(-3px);
+    transform: translateY(-.3rem);
+    transition: all .4s;
 }
 .delete:active {
-    transform: translateY(-1px);
+    transform: translateY(-.1rem);
+}
+.undo {
+    position: fixed;
+    background-color: #4b9924;
+    padding: 1rem 2rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    top: 90vh;
+    left: 2vh;
+    animation: moveLeft .2s ease-out;
+}
+@keyframes moveLeft{
+    0% {
+        opacity: 0;
+        transform: translateX(-10rem);
+    }
+
+    80% {
+        transform: translateX(1rem);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(0);
+    }
 }
 
 

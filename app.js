@@ -12,7 +12,7 @@ const movieTitle = document.querySelector('.title');
 const movieDescription = document.querySelector('.description');
 const movieDuration = document.querySelector('.duration');
 const main = document.querySelector('main');
-
+const undo = document.querySelector('.undo');
 
 let mainUser;
 if(JSON.parse(localStorage.getItem('user'))) {
@@ -62,7 +62,8 @@ loginBtn.addEventListener('click', () => {
     if (!registerFormContainer.classList.contains('hidden')) {
         registerFormContainer.classList.add('hidden')
     }
-    loginFormContainer.classList.remove('hidden')
+    loginFormContainer.classList.remove('hidden');
+    
 })
 login.addEventListener('submit', e => {
     e.preventDefault();
@@ -99,7 +100,13 @@ movie.addEventListener('submit', e => {
     movie.reset();
     addMovie(movieId, title, details, userId, duration);
 });
-deleteMovie
+
+undo.addEventListener('click', () => {
+    store.dispatch({
+        type: 'UNDO'
+    })
+    undo.classList.add('hidden')
+})
 
 
 let time;
@@ -142,8 +149,10 @@ main.addEventListener('click', (e) => {
     };
 
     if(e.target.classList.contains('delete') || e.target.closest('.delete')) {
-        console.log('delete triggered');
         deleteMovie(movieId, userId);
+        if(store.getState().past.length > 0){
+            undo.classList.remove('hidden')
+        }
     }
     
 });
