@@ -13,7 +13,7 @@ const movieDescription = document.querySelector('.description');
 const movieDuration = document.querySelector('.duration');
 const main = document.querySelector('main');
 const undo = document.querySelector('.undo');
-
+const redo = document.querySelector('.redo');
 let mainUser;
 if(JSON.parse(localStorage.getItem('user'))) {
     mainUser = JSON.parse(localStorage.getItem('user'))
@@ -68,7 +68,7 @@ loginBtn.addEventListener('click', () => {
 login.addEventListener('submit', e => {
     e.preventDefault();
     const username = login.username.value.trim();
-    const user = store.getState().present.users.find(u => u.name === username);
+    const user = store.getState().users.find(u => u.name === username);
     if (user){
         localStorage.setItem('user', JSON.stringify(user));
         mainUser = user;
@@ -105,7 +105,16 @@ undo.addEventListener('click', () => {
     store.dispatch({
         type: 'UNDO'
     })
-    undo.classList.add('hidden')
+    console.log(store.getState().movies.future);
+    if(store.getState().movies.future.length > 0){
+        redo.classList.remove('hidden')
+        setTimeout(() => redo.classList.add('hidden'), 80000)
+    }
+})
+redo.addEventListener('click', () => {
+    store.dispatch({
+        type: 'REDO'
+    })
 })
 
 
@@ -167,15 +176,16 @@ main.addEventListener('click', (e) => {
 
     if(e.target.classList.contains('delete') || e.target.closest('.delete')) {
         deleteMovie(movieId, userId);
-        if(store.getState().past.length > 0){
+        if(store.getState().movies.past.length > 0){
             undo.classList.remove('hidden')
-            setTimeout(() => undo.classList.add('hidden'), 6000)
+            setTimeout(() => undo.classList.add('hidden'), 80000)
         }
+        
     }
     
 });
 
-function formatTimeWithDateFns(seconds) {
+function formatTimeFromSeconds(seconds) {
     const baseDate = new Date(0); // Base date: Jan 1, 1970
     const resultDate = dateFns.addSeconds(baseDate, seconds);
 
@@ -196,7 +206,7 @@ const render = () => {
 
     main.innerHTML = '';
     
-    getAllMovies().forEach(movie => {
+    getAllMovies()?.forEach(movie => {
         const isFavorite = mainUser?.favorites.some(m => m.movieId === movie.movieId);
         const isInWatchlist = mainUser?.watchlist.some(m => m.movieId === movie.movieId);
         const overAllRate = getOverAllRate(movie.movieId);
@@ -231,7 +241,7 @@ const render = () => {
                     <i class="fa-solid fa-pause pause ${isPlaying? '' : 'hidden'}"></i>
             </div>
             <div class="timer">
-               ${formatTimeWithDateFns(duration)}  ${timer?`/${formatTimeWithDateFns(timer)}`:''}
+               ${formatTimeFromSeconds(duration)}  ${timer?`/${formatTimeFromSeconds(timer)}`:''}
             </div>
             <div class="footer">
                 <div class="title-rate">

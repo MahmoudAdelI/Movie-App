@@ -240,7 +240,7 @@ const undoable = (reducer) => {
                     return state;
                 }
                 return {
-                    past: [...past, present],
+                    past: past.length >= 10 ?[...past, present].slice(1) : [...past, present],
                     present: newPresent,
                     future: []
                 };
@@ -260,9 +260,9 @@ const saveState = (state) => {
 };
 
 const cachedState = loadState();
-const rootReducer = combineReducers({ users: usersReducer, movies: movieReducer });
-const undoableReducer = undoable(rootReducer);
-export const store = createStore(undoableReducer, cachedState);
+const undoableMovies = undoable(movieReducer);
+const rootReducer = combineReducers({ users: usersReducer, movies: undoableMovies });
+export const store = createStore(rootReducer, cachedState);
 
 
 store.subscribe(() => saveState(store.getState()));
