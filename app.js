@@ -117,7 +117,6 @@ main.addEventListener('click', (e) => {
     const movieId = movieCard.getAttribute('data-id'); // it returned as string
     if(e.target.classList.contains('play')) {
         startTime = new Date();
-        console.log(`Started playing movie with ID: ${movieId}`);
         // ADD THE MOVIE TO WATCHED ARRAY IF NOT EXISTS
         addToWatched(userId, movieId, startTime);
         
@@ -144,10 +143,9 @@ main.addEventListener('click', (e) => {
     
     if (e.target.classList.contains('pause')) {                   
             const endTime = new Date();
-            console.log(`Paused movie with ID: ${movieId}, watched time: ${watchedTime}s`);
             // UPDATE THE MOVIES IN WATCHED ARRAY
             togglePlayPause(movieId);
-            updateWatched(userId, movieId, watchedTime, endTime);
+            updateWatched(userId, movieId, endTime);
             startTime = null;
         };
     
