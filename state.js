@@ -59,12 +59,22 @@ const user = (state, action) => {
                 watched: [...state.watched, {
                     movieId: action.payload.movieId,
                     startTime: action.payload.startTime,
-                    watchedTime: 0,
-                    pasuedTimes: 0,
                     completed: undefined,
                     finishedIn: undefined,
-                    isPlaying: true
+                    isPlaying: true,
+                    timer: 0
                 }]
+            }
+        case 'UPDATE_TIMER':
+            return {
+                ...state,
+                watched: state.watched.map(m =>
+                m.movieId === action.payload.movieId ?
+                {
+                    ...m,
+                    timer: m.timer + 1
+                } : m
+            )
             }
 
         case 'UPDATE_WATCHED': 
@@ -74,11 +84,8 @@ const user = (state, action) => {
                     watched: state.watched.map(m =>
                     m.movieId === action.payload.movieId ?
                         {...m,
-                            watchedTime: m.watchedTime + action.payload.watchedTime,
-                            pasuedTimes: m.pasuedTimes + 1,
                             completed: action.payload.completed,
                             finishedIn: action.payload.finishedIn,
-                            isPlaying: false
                             }
                         : m
                     )
@@ -89,7 +96,7 @@ const user = (state, action) => {
                 ...state,
                 watched: state.watched.map(m =>
                     m.movieId === action.payload.movieId ?
-                    {...m, isPlaying: true} 
+                    {...m, isPlaying: !m.isPlaying} 
                     : m
                 )
             };
@@ -119,6 +126,9 @@ const usersReducer = (state = [], action) => {
             return state.map(u => user(u, action));
         
         case 'UPDATE_WATCHED':
+            return state.map(u => user(u, action)); 
+
+        case 'UPDATE_TIMER': // test
             return state.map(u => user(u, action)); 
 
         case 'TOGGLE_PLAY_PAUSE':

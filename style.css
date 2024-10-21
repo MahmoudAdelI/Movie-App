@@ -58,7 +58,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2.5rem;
-    width: 30rem;
+    width: 24rem;
     padding: 4rem;
     transition: .3s ease-out;
 }
@@ -168,10 +168,10 @@ main {
         
     }
     html {
-        font-size: 6px;
+        font-size: 10px;
     }
     body {
-        font-size: 10px;
+        font-size: 12px;
     }
     .stars-container {
         opacity: 1 !important;
@@ -229,6 +229,14 @@ img {
     transform: translate(-50%, -50%);
     cursor: pointer;
 }
+.timer {
+    position: absolute;
+    top: 78%;
+    right: 5%;
+    padding: .2rem .4rem;
+    border-radius: .5rem;
+    background-color: rgba(0, 0, 0, .4);
+}
 .hidden {
     display: none !important;
 }
@@ -266,6 +274,7 @@ img {
 .icon-clicked {
     color: #4b9924;
 }
+
 
 .delete i {
     font-size: 1rem;

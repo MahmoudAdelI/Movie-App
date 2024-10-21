@@ -1,5 +1,5 @@
 import { getAllMovies, getMovie, getOverAllRate, getUser } from "./getters.js";
-import { addMovie, addToWatched, addUser, deleteMovie, rateMovie, toggleFavorites, toggleWatchlist, updateWatched } from "./setters.js";
+import { addMovie, addToWatched, addUser, deleteMovie, rateMovie, toggleFavorites, togglePlayPause, toggleWatchlist, updateWatched } from "./setters.js";
 import { store } from "./state.js";
 
 
@@ -109,27 +109,46 @@ undo.addEventListener('click', () => {
 })
 
 
-let time;
+let startTime;
 main.addEventListener('click', (e) => {
     const movieCard = e.target.closest('.movie-card');
     if (!movieCard) return;
     const userId = mainUser.userId;
     const movieId = movieCard.getAttribute('data-id'); // it returned as string
-
     if(e.target.classList.contains('play')) {
-        time = new Date();
+        startTime = new Date();
         console.log(`Started playing movie with ID: ${movieId}`);
         // ADD THE MOVIE TO WATCHED ARRAY IF NOT EXISTS
-        addToWatched(userId, movieId, time);
+        addToWatched(userId, movieId, startTime);
+        
+        const time = setInterval(() => {
+            const isPlaying = mainUser.watched.find(m=>m.movieId===movieId).isPlaying;
+            const timer = mainUser.watched.find(m=>m.movieId===movieId).timer;
+            const endTime = new Date();
+            if(
+                !isPlaying || timer >= getMovie(movieId).duration
+            ) {
+                if (isPlaying) {
+                    togglePlayPause(movieId);  // Toggle once, when timer stops.
+                }
+                clearInterval(time);
+                updateWatched(userId, movieId, endTime);
+            } else {
+                store.dispatch({
+                    type: 'UPDATE_TIMER',
+                    payload: {movieId}
+                })
+            }
+        }, 1000);
         };
     
     if (e.target.classList.contains('pause')) {                   
             const endTime = new Date();
-            const watchedTime = Math.floor(( endTime - time ) / 1000); // to seconds...
             console.log(`Paused movie with ID: ${movieId}, watched time: ${watchedTime}s`);
             // UPDATE THE MOVIES IN WATCHED ARRAY
+            togglePlayPause(movieId);
             updateWatched(userId, movieId, watchedTime, endTime);
-            time = null;
+            startTime = null;
         };
     
     if (e.target.classList.contains('favorite')) {
@@ -152,11 +171,24 @@ main.addEventListener('click', (e) => {
         deleteMovie(movieId, userId);
         if(store.getState().past.length > 0){
             undo.classList.remove('hidden')
+            setTimeout(() => undo.classList.add('hidden'), 6000)
         }
     }
     
 });
 
+function formatTimeWithDateFns(seconds) {
+    const baseDate = new Date(0); // Base date: Jan 1, 1970
+    const resultDate = dateFns.addSeconds(baseDate, seconds);
+
+    if (seconds >= 3600) {
+        // Format with hours, minutes, and seconds (HH:mm:ss)
+        return dateFns.format(resultDate, 'H:mm:ss');
+    } else {
+        // Format with minutes and seconds (mm:ss)
+        return dateFns.format(resultDate, 'm:ss');
+    }
+}
 
 const render = () => {
     if(mainUser){
@@ -171,16 +203,17 @@ const render = () => {
         const isInWatchlist = mainUser?.watchlist.some(m => m.movieId === movie.movieId);
         const overAllRate = getOverAllRate(movie.movieId);
         const isPlaying = mainUser?.watched.find(m => m.movieId === movie.movieId)?.isPlaying;
-        console.log(mainUser);
-        const lastRating = getMovie(movie.movieId).ratings.find(r=> r.userId === mainUser.userId)?.rating;
+        const lastRating = getMovie(movie.movieId).ratings.find(r=> r.userId === mainUser?.userId)?.rating;
+        const timer = mainUser?.watched.find(m => m.movieId === movie.movieId)?.timer;
+        const duration = getMovie(movie.movieId).duration;
         const isAdmin = mainUser?.type === 'ADMIN';
         console.log(`test ${isAdmin}`);
         const html = `
         <div class="movie-card" data-id="${movie.movieId}">
-            <div class="delete ${!isAdmin? 'hidden':''}">
+            <div class="delete ${isAdmin? '':'hidden'}">
                 <i class="fa-solid fa-trash"></i>
             </div>
-            <div class="stars-container ${!isAdmin? '':'hidden'}">
+            <div class="stars-container ${isAdmin? 'hidden':''}">
                 <div class="stars">
                     <label class="fas fa-star ${lastRating===10?'selected':''}" data-rating="10"></label>
                     <label class="fas fa-star ${lastRating===9?'selected':''}" data-rating="9"></label>
@@ -195,16 +228,19 @@ const render = () => {
                 </div>
             </div>
             <img src="https://picsum.photos/200/300" alt="${movie.title}">
-            <div class="playPause">           
+            <div class="playPause ${!isAdmin? '':'hidden'}">           
                     <i class="fa-solid fa-play play ${!isPlaying? '' : 'hidden'}"></i>
                     <i class="fa-solid fa-pause pause ${isPlaying? '' : 'hidden'}"></i>
+            </div>
+            <div class="timer">
+               ${formatTimeWithDateFns(duration)}  ${timer?`/${formatTimeWithDateFns(timer)}`:''}
             </div>
             <div class="footer">
                 <div class="title-rate">
                     <div class="title">${movie.title}</div>
                     <div class="rate">${overAllRate} ⭐</div>
                 </div>
-                <div class="icons">
+                <div class="icons ${!isAdmin? '':'hidden'}">
                     <i class="fa-regular fa-heart favorite ${isFavorite? 'icon-clicked': ''}" ></i>
                     <i class="fa-regular fa-square-plus watchList ${isInWatchlist? 'icon-clicked': ''}"></i>
                 </div>

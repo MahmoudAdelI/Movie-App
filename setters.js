@@ -79,6 +79,12 @@ export const toggleWatchlist = (userId, movieId) => {
     }
 };
 
+export const togglePlayPause = movieId => {
+    store.dispatch({
+        type: 'TOGGLE_PLAY_PAUSE',
+        payload: {movieId}
+    })
+};
 export const addToWatched = (userId, movieId, startTime) => {
     const user = getUser(userId);
     const movie = user.watched.find(m => m.movieId === movieId);
@@ -90,21 +96,18 @@ export const addToWatched = (userId, movieId, startTime) => {
     }; 
     if(!movie.isPlaying) { // to toggle the play btn
         console.log('isPlaying has been toggled');
-        return store.dispatch({
-            type: 'TOGGLE_PLAY_PAUSE',
-            payload: {movieId}
-        })
+        return togglePlayPause(movieId)
     }
 };
 
-export const updateWatched = (userId, movieId, watchedTime, endTime) => {
+export const updateWatched = (userId, movieId, endTime) => {
     const user = getUser(userId);
     const watchedMovie = user.watched.find(m => m.movieId === movieId);
     const movie = getMovie(movieId);
     if(watchedMovie) {
         // if completed is already set we retrive the first completed date, we don't need to refresh
         // its value with every pause
-        const completed = watchedMovie.watchedTime + watchedTime >= movie.duration ?
+        const completed = watchedMovie.timer >= movie.duration ?
         watchedMovie.completed || `completed at ${endTime.toLocaleString()}` : false;
         // same logic here with finishedIn
         const finishedIn = completed ?
@@ -112,9 +115,11 @@ export const updateWatched = (userId, movieId, watchedTime, endTime) => {
 
         return store.dispatch({
             type: 'UPDATE_WATCHED',
-            payload: {movieId, watchedTime, completed, finishedIn}
+            payload: {movieId, completed, finishedIn}
         })
+        
     };
+
 };
 
 
